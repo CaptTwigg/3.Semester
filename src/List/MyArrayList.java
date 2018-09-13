@@ -1,24 +1,23 @@
 package List;
 
-public class MyArrayList<T> implements MyList {
-  private int arrayLength = 5;
+public class MyArrayList<T> implements MyList<T> {
   private int size = 0;
-  private T[] array = (T[]) new Object[arrayLength];
+  private T[] array = (T[]) new Object[5];
 
   @Override
   public T get(int index) {
-    if (index > size || index < 0)
+    if (index >= size || index < 0)
       throw new IndexOutOfBoundsException("Too large or negative :) index: " + index);
 
     return array[index];
   }
 
   @Override
-  public void add(Object o) {
-    if (size == arrayLength) {
+  public void add(T t) {
+    if (size == array.length)
       expandArray();
-    }
-    array[size] = (T) o;
+
+    array[size] = t;
     size++;
   }
 
@@ -40,18 +39,17 @@ public class MyArrayList<T> implements MyList {
   }
 
   @Override
-  public void set(int index, Object o) {
-    array[index] = (T) o;
+  public void set(int index, T t) {
+    array[index] = t;
   }
+
   private void expandArray() {
     T[] tempArray = array;
-    arrayLength += 5;
-    array = (T[]) new Object[arrayLength];
+    array = (T[]) new Object[size + 5];
 
     for (int i = 0; i < tempArray.length; i++)
       array[i] = tempArray[i];
   }
-
 
   @Override
   public String toString() {

@@ -1,6 +1,6 @@
 package List;
 
-public class MySet<T> implements MyList, Comparable<T> {
+public class MySet<T> implements MyList {
 
   int size;
   private int arraySize = 10;
@@ -15,7 +15,7 @@ public class MySet<T> implements MyList, Comparable<T> {
 
   @Override
   public void add(Object o) {
-    compare = (T)o;
+    compare = (T) o;
     boolean dub = false;
     for (T t : array)
       if (t != null)
@@ -25,7 +25,7 @@ public class MySet<T> implements MyList, Comparable<T> {
         expandArray();
       array[size] = (T) o;
       size++;
-      //Arrays.sort(array);
+
     }
   }
 
@@ -51,11 +51,6 @@ public class MySet<T> implements MyList, Comparable<T> {
 
   private boolean equalsTo(T thisO, T o) {
     return thisO.equals(o);
-  }
-
-  @Override
-  public int compareTo(T o) {
-    return 1;
   }
 
   private void expandArray() {

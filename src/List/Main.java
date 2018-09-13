@@ -13,21 +13,17 @@ public class Main {
     System.out.println(mySet);
 
     MyArrayList<Integer> myArrayList = new MyArrayList<>();
-    for (int i = 0; i < 10; i++) {
-      myArrayList.add(i);
-    }
-    myArrayList.add(10);
-
-    myArrayList.remove(1);
-    myArrayList.add(11);
-
+//    for (int i = 0; i < 11; i++) {
+//      myArrayList.add(i);
+//    }
+//    myArrayList.remove(5);
 
     System.out.println(myArrayList);
     System.out.println("Array size: " + myArrayList.size());
 //    System.out.println(myArrayList.get(-3));
-    System.out.println(myArrayList.get(0));
-    System.out.println(myArrayList.get(1));
-    System.out.println(myArrayList.get(200));
+//    System.out.println(myArrayList.get(0));
+//    System.out.println(myArrayList.get(1));
+//    System.out.println(myArrayList.get(200));
   }
 }
 
