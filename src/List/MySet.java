@@ -55,8 +55,7 @@ public class MySet<T> implements MyList {
 
   private void expandArray() {
     T[] tempArray = array;
-    arraySize += 5;
-    array = (T[]) new Object[arraySize];
+    array = (T[]) new Object[size + 5];
 
     for (int i = 0; i < tempArray.length; i++)
       array[i] = tempArray[i];
