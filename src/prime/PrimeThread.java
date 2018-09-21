@@ -2,7 +2,7 @@ package prime;
 
 public class PrimeThread implements Runnable {
   static int noOfThreads = 2;
-  static long max = 10000000 L;
+  static long max = 10000000L;
   static long end = max / noOfThreads;
   static long start = 2;
   static long interval = max / noOfThreads;
