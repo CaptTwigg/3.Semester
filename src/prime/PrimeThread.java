@@ -1,8 +1,8 @@
 package prime;
 
 public class PrimeThread implements Runnable {
-  static int noOfThreads = 2;
-  static long max = 10000000L;
+  static int noOfThreads = 8;
+  static long max = 10_000_000L;
   static long end = max / noOfThreads;
   static long start = 2;
   static long interval = max / noOfThreads;
@@ -13,15 +13,24 @@ public class PrimeThread implements Runnable {
     long timestart = System.currentTimeMillis();
     Thread[] threads = new Thread[noOfThreads];//amount of threads
     for (int b = 0; b < threads.length; b++) {
-      threads[b] = new Thread(new PrimeThread());
-      threads[b].start();
+      int finalB = b;
+      threads[b] = new Thread(()->{
+        for (long i = max* finalB/noOfThreads +1; i <= max*(finalB+1)/noOfThreads; i++) {
+          if (isPrime(i)) {
+            counter.increment();
+          }
+        }
+      });
       System.out.println("start: " + start);
       System.out.println("End:   " + end);
-      if(b < (noOfThreads-1)) {
+      if (b < (noOfThreads - 1)) {
         start = end + 1;
         end = (interval * (b + 2));
       }
     }
+    for (Thread t : threads)
+      t.start();
+
     for (Thread thread : threads) {
       thread.join();
     }
@@ -32,7 +41,7 @@ public class PrimeThread implements Runnable {
 
   }
 
-  public static  boolean isPrime(long number) {
+  public static boolean isPrime(long number) {
     if (number == 2) {
       return true;
     }
@@ -50,7 +59,7 @@ public class PrimeThread implements Runnable {
   }
 
   @Override
-  public void run() {
+  public  void run() {
     for (long i = start; i <= end; i++) {
       if (isPrime(i)) {
         counter.increment();

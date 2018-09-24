@@ -3,14 +3,14 @@ package prime;
 public class RunMe {
   public static void main(String[] args) {
 
-    long max = 100L;
+    long max = 10000000L;
     final LongCounter counter = new LongCounter();
     int noOfThreads = 4;
 
     long start = System.currentTimeMillis();
 
     Thread t1 = new Thread(()->{
-      for (long i = 1; i <= max/2; i++) {
+      for (long i = 2; i <= max/2; i++) {
         if (isPrime(i)) {
           counter.increment();
         }
