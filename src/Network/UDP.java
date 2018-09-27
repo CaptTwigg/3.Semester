@@ -29,15 +29,14 @@ public class UDP {
       sendingSocket = new DatagramSocket();
       IPAddress = InetAddress.getByName("127.0.0.1");
       sendToPort = toPort;
-    } catch (SocketException e) {
-      e.printStackTrace();
-    } catch (UnknownHostException e) {
+    } catch (SocketException | UnknownHostException e) {
       e.printStackTrace();
     }
 
     threadReceive(receivingSocket);
 
   }
+
 
    void threadReceive(DatagramSocket receivingSocket) {
     Thread thread = new Thread(() -> {

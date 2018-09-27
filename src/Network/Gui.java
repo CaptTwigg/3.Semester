@@ -55,5 +55,6 @@ public void addToTextPanel(String text){
     Gui gui2 = new Gui(udp2, "6701");
     udp1.setGui(gui1);
     udp2.setGui(gui2);
+
   }
 }
