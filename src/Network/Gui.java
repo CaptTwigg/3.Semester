@@ -25,6 +25,7 @@ public class Gui {
     frame.setSize(800,400);
     frame.setVisible(true);
 
+
     textField1.addKeyListener(new KeyAdapter() {
       @Override
       public void keyPressed(KeyEvent e) {

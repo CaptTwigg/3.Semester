@@ -58,9 +58,8 @@ public class UDP {
   }
 
   void send(String sentence) throws Exception {
-
     int length;
-    byte[] data = new byte[1024];
+    byte[] data;
 
     length = sentence.length();
     data = sentence.getBytes();
