@@ -5,62 +5,89 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.Socket;
+import java.util.Scanner;
 
 public class Client {
   static BufferedReader inFromUser;
-  static volatile Socket clientSocket;
+  static Socket clientSocket;
   static DataOutputStream outToServer;
-  static String username;
+  static BufferedReader inFromServer;
+  static String username = "hanse9";
+  static String sentence = "";
+  static String msg = "";
+
   public static void main(String argv[]) throws Exception {
-    String sentence;
-    clientSocket = new Socket("127.0.0.1", 5656);
+
+    clientSocket = new Socket("localhost", 5656);
     inFromUser = new BufferedReader(new InputStreamReader(System.in));
     outToServer = new DataOutputStream(clientSocket.getOutputStream());
-     threadAlive();
+    do {
+      Scanner scanner = new Scanner(System.in);
+      System.out.println("Enter username: ");
+      username = scanner.next();
+      outToServer.writeBytes("JOIN " + username+ ", 127.0.0.1:5656\n");
+
+    }while (!ableToJoinServer());
+    threadAlive();
+    threadReceive();
+
     while (true) {
-      BufferedReader inFromServer = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
+      inFromServer = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
 
       System.out.print("Please type your text: ");
-      sentence = inFromUser.readLine();
-
+      msg = inFromUser.readLine();
+      sentence = String.format("DATA %s: %s", username, msg);
+      System.out.println(sentence);
       outToServer.writeBytes(sentence + '\n');
-
-      sentence = inFromServer.readLine();
-
-      System.out.println("FROM SERVER: " + sentence);
-      System.out.println(clientSocket.isConnected());
+      if (msg.equals("QUIT"))
+        break;
     }
-
     //clientSocket.close();
 
   }
 
-  static void threadAlive( ) {
+  static void threadAlive() {
     Thread thread = new Thread(() -> {
-
-      Socket clientSocket = null;
-      DataOutputStream outToServer  = null;
-
-      try {
-        clientSocket = new Socket("127.0.0.1", 5656);
-        outToServer = new DataOutputStream(clientSocket.getOutputStream());
-      } catch (IOException e) {
-        e.printStackTrace();
-      }
-
       while (true) {
         try {
-          outToServer.writeBytes("IMAV");
-          System.out.println("IMAV");
-
-          Thread.sleep(1000);
+          Thread.sleep(60000);
+          if (msg.equals("QUIT"))
+            break;
+          outToServer.writeBytes("IMAV\n");
         } catch (IOException | InterruptedException e) {
           e.printStackTrace();
+          break;
         }
       }
     });
     thread.start();
   }
 
+  static void threadReceive() {
+    Thread thread = new Thread(() -> {
+      while (true) {
+        try {
+          String sentence;
+          BufferedReader inFromClient = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
+          sentence = inFromClient.readLine();
+          if (sentence == null)
+            break;
+          System.out.println(sentence);
+        } catch (IOException e) {
+          e.printStackTrace();
+          break;
+        }
+      }
+    });
+    thread.start();
+  }
+
+  static boolean ableToJoinServer() throws IOException {
+    BufferedReader inFromClient = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
+    String sentence = inFromClient.readLine();
+    System.out.println(sentence);
+    return sentence.equals("J_OK");
+
+  }
 
 }
