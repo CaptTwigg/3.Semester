@@ -15,13 +15,14 @@ public class Client {
   static String username = "hanse9";
   static String sentence = "";
   static String msg = "";
+  static Thread aliveThread;
 
   public static void main(String argv[]) throws Exception {
 
-    clientSocket = new Socket("localhost", 5656);
     inFromUser = new BufferedReader(new InputStreamReader(System.in));
-    outToServer = new DataOutputStream(clientSocket.getOutputStream());
     do {
+      clientSocket = new Socket("localhost", 5656);
+      outToServer = new DataOutputStream(clientSocket.getOutputStream());
       Scanner scanner = new Scanner(System.in);
       System.out.println("Enter username: ");
       username = scanner.next();
@@ -37,17 +38,19 @@ public class Client {
       System.out.print("Please type your text: ");
       msg = inFromUser.readLine();
       sentence = String.format("DATA %s: %s", username, msg);
-      System.out.println(sentence);
       outToServer.writeBytes(sentence + '\n');
-      if (msg.equals("QUIT"))
+      if (msg.equals("QUIT")){
+        aliveThread.interrupt();
         break;
+      }
+
     }
     //clientSocket.close();
 
   }
 
   static void threadAlive() {
-    Thread thread = new Thread(() -> {
+    aliveThread = new Thread(() -> {
       while (true) {
         try {
           Thread.sleep(60000);
@@ -60,7 +63,8 @@ public class Client {
         }
       }
     });
-    thread.start();
+    aliveThread.start();
+
   }
 
   static void threadReceive() {
@@ -73,7 +77,7 @@ public class Client {
           if (sentence == null)
             break;
           System.out.println(sentence);
-        } catch (IOException e) {
+        } catch (IOException  e) {
           e.printStackTrace();
           break;
         }

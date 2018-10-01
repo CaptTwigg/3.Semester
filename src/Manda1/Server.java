@@ -22,17 +22,23 @@ public class Server {
     welcomeSocket = new ServerSocket(5656);
     inFromUser = new BufferedReader(new InputStreamReader(System.in));
     System.out.println(welcomeSocket.getLocalSocketAddress());
-    Socket connectionSocket = welcomeSocket.accept();
-    System.out.println(connectionSocket.getInetAddress());
 
     while (true) {
+      Socket connectionSocket = welcomeSocket.accept();
       HashMap<String, Object> hashMap = new HashMap<>();
       String name = joinData(connectionSocket);
-      if(freeUsername(name)){
-        serverResponseMsg(connectionSocket, "J_ER Duplicate username: Username " + name + "taken." );
+      if (freeUsername(name)) {
+        serverResponseMsg(connectionSocket, "J_ER Duplicate username: Username " + name + " taken.");
+        continue;
+      } else if (illegalChar(name)) {
+        serverResponseMsg(connectionSocket, "J_ER Illegal character: Only letters, digits, ‘-‘ and ‘_’ allowed.");
+        continue;
+      } else if (name.length() > 12) {
+        serverResponseMsg(connectionSocket, "J_ER Username too long : Max 12 characters.");
         continue;
       } else
-        serverResponseMsg(connectionSocket,"J_OK");
+        serverResponseMsg(connectionSocket, "J_OK");
+
       hashMap.put("username", name);
       hashMap.put("alive", true);
       hashMap.put("socket", connectionSocket);
@@ -58,14 +64,16 @@ public class Server {
 
           sentence = inFromClient.readLine();
           String[] data = sentence.split(":");
-          if (commandValidation(data)){
-            serverResponseMsg(connectionSocket,"J_OK");
-          }
-          if (sentence.equals("IMAV")){
+          if (sentence.equals("IMAV")) {
             updateIMAV(connectionSocket);
             continue;
           }
-
+          if (commandValidation(data)) {
+            serverResponseMsg(connectionSocket, "J_OK");
+          } else {
+            serverResponseMsg(connectionSocket, "J_ER Unknown command: " + data[0].split(" ")[0].trim());
+            continue;
+          }
           if (data[1].trim().equals("QUIT")) {
             break;
           }
@@ -89,7 +97,7 @@ public class Server {
 
   static void syncChat(String msg, String name) throws IOException {
     for (HashMap userMap : users) {
-      if(name.equals(userMap.get("username").toString()))
+      if (name.equals(userMap.get("username").toString()))
         continue;
       DataOutputStream outToClient = new DataOutputStream(((Socket) userMap.get("socket")).getOutputStream());
       outToClient.writeBytes(name + ": " + msg + '\n');
@@ -107,12 +115,13 @@ public class Server {
 
   }
 
-  static boolean commandValidation(String[] data)  {
-    String command = data[0].substring(0,4).trim();
+  static boolean commandValidation(String[] data) {
+    String command = data[0].split(" ")[0].trim();
+    System.out.println(command);
     return command.equals("JOIN") | command.equals("DATA") | command.equals("IMAV") | command.equals("QUIT");
   }
 
-  static String joinData(Socket connectionSocket)throws IOException{
+  static String joinData(Socket connectionSocket) throws IOException {
     BufferedReader inFromClient = new BufferedReader(new InputStreamReader(connectionSocket.getInputStream()));
     String join = inFromClient.readLine();
     System.out.println(join);
@@ -127,22 +136,27 @@ public class Server {
 
   static void serverResponseMsg(Socket socket, String msg) throws IOException {
     DataOutputStream outToClient = new DataOutputStream((socket.getOutputStream()));
-    outToClient.writeBytes(msg+"\n");
+    outToClient.writeBytes(msg + "\n");
   }
 
-  static void updateIMAV(Socket socket){
-    for (HashMap user : users){
-      if(((Socket)user.get("socket")).getPort() == socket.getPort())
-        user.put("alive",true);
+  static void updateIMAV(Socket socket) {
+    for (HashMap user : users) {
+      if (((Socket) user.get("socket")).getPort() == socket.getPort())
+        user.put("alive", true);
       break;
     }
-    System.out.println("Update alive for: " +socket.getPort());
+    System.out.println("Update alive for: " + socket.getPort());
   }
 
-  static boolean freeUsername(String name){
+  static boolean freeUsername(String name) {
     for (HashMap user : users)
       return user.get("username").toString().equalsIgnoreCase(name);
     return false;
+  }
+
+  static boolean illegalChar(String name) {
+    String[] array = name.split("[^A-Za-z0-9\\-\\_]");
+    return array.length > 1;
   }
 
   static void removeByPort(int port) {
