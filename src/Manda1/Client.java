@@ -1,17 +1,18 @@
 package Manda1;
 
 import java.io.BufferedReader;
-import java.io.DataOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.OutputStream;
 import java.net.Socket;
 import java.util.Scanner;
 
 public class Client {
   static BufferedReader inFromUser;
   static Socket clientSocket;
-  static DataOutputStream outToServer;
-  static BufferedReader inFromServer;
+  static OutputStream outToServer;
+  static InputStream inFromServer;
   static String username = "hanse9";
   static String sentence = "";
   static String msg = "";
@@ -21,24 +22,24 @@ public class Client {
 
     inFromUser = new BufferedReader(new InputStreamReader(System.in));
     do {
+//      clientSocket = new Socket("172.16.20.144", 4545);
       clientSocket = new Socket("localhost", 5656);
-      outToServer = new DataOutputStream(clientSocket.getOutputStream());
+      outToServer = clientSocket.getOutputStream();
       Scanner scanner = new Scanner(System.in);
       System.out.println("Enter username: ");
       username = scanner.next();
-      outToServer.writeBytes("JOIN " + username+ ", 127.0.0.1:5656\n");
+      outToServer.write(("JOIN " + username+ ", 127.0.0.1:5656").getBytes());
 
     }while (!ableToJoinServer());
     threadAlive();
     threadReceive();
+    System.out.print("Please type your text: ");
 
     while (true) {
-      inFromServer = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
-
-      System.out.print("Please type your text: ");
+      inFromServer =(clientSocket.getInputStream());
       msg = inFromUser.readLine();
       sentence = String.format("DATA %s: %s", username, msg);
-      outToServer.writeBytes(sentence + '\n');
+      outToServer.write(sentence.getBytes());
       if (msg.equals("QUIT")){
         aliveThread.interrupt();
         break;
@@ -54,9 +55,7 @@ public class Client {
       while (true) {
         try {
           Thread.sleep(60000);
-          if (msg.equals("QUIT"))
-            break;
-          outToServer.writeBytes("IMAV\n");
+          outToServer.write("IMAV".getBytes());
         } catch (IOException | InterruptedException e) {
           e.printStackTrace();
           break;
@@ -71,12 +70,13 @@ public class Client {
     Thread thread = new Thread(() -> {
       while (true) {
         try {
-          String sentence;
-          BufferedReader inFromClient = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
-          sentence = inFromClient.readLine();
-          if (sentence == null)
+          InputStream inFromClient = (clientSocket.getInputStream());
+          byte[] bytes = new byte[1024];
+          inFromClient.read(bytes);
+          String sentence= new String(bytes);
+          if (msg.equals("QUIT"))
             break;
-          System.out.println(sentence);
+          System.out.println("from server: " + sentence.trim());
         } catch (IOException  e) {
           e.printStackTrace();
           break;
@@ -87,10 +87,12 @@ public class Client {
   }
 
   static boolean ableToJoinServer() throws IOException {
-    BufferedReader inFromClient = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
-    String sentence = inFromClient.readLine();
-    System.out.println(sentence);
-    return sentence.equals("J_OK");
+    InputStream inFromClient = (clientSocket.getInputStream());
+    byte[] bytes = new byte[1024];
+    inFromClient.read(bytes);
+    String sentence= new String(bytes);
+    System.out.println(sentence.trim());
+    return sentence.trim().equals("J_OK");
 
   }
 

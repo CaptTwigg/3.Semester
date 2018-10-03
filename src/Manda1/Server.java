@@ -1,43 +1,47 @@
 package Manda1;
 
-import java.io.BufferedReader;
-import java.io.DataOutputStream;
 import java.io.IOException;
-import java.io.InputStreamReader;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class Server {
 
   static ServerSocket welcomeSocket;
-  static BufferedReader inFromUser;
-  static ArrayList<Socket> sockets = new ArrayList<>();
+  static InputStream inFromUser;
   static ArrayList<HashMap> users = new ArrayList<>();
 
 
   public static void main(String argv[]) throws Exception {
 
     welcomeSocket = new ServerSocket(5656);
-    inFromUser = new BufferedReader(new InputStreamReader(System.in));
+
+    //inFromUser = new BufferedReader(new InputStreamReader(System.in));
     System.out.println(welcomeSocket.getLocalSocketAddress());
 
     while (true) {
       Socket connectionSocket = welcomeSocket.accept();
+      inFromUser = connectionSocket.getInputStream();
       HashMap<String, Object> hashMap = new HashMap<>();
-      String name = joinData(connectionSocket);
+      String name = joinData(connectionSocket).trim();
       if (freeUsername(name)) {
         serverResponseMsg(connectionSocket, "J_ER Duplicate username: Username " + name + " taken.");
         continue;
-      } else if (illegalChar(name)) {
+      }
+      if (illegalChar(name)) {
         serverResponseMsg(connectionSocket, "J_ER Illegal character: Only letters, digits, ‘-‘ and ‘_’ allowed.");
         continue;
-      } else if (name.length() > 12) {
+      }
+      if (name.length() > 12) {
         serverResponseMsg(connectionSocket, "J_ER Username too long : Max 12 characters.");
         continue;
-      } else
-        serverResponseMsg(connectionSocket, "J_OK");
+      }
+
+      serverResponseMsg(connectionSocket, "J_OK");
 
       hashMap.put("username", name);
       hashMap.put("alive", true);
@@ -46,7 +50,6 @@ public class Server {
 
       newUserJoined();
       threadReceive(connectionSocket);
-      sockets.add(connectionSocket);
     }
 
 
@@ -55,21 +58,24 @@ public class Server {
   }
 
   static void threadReceive(Socket connectionSocket) {
-
+    AtomicInteger i = new AtomicInteger();
+    timerThread(i, connectionSocket.getPort());
     Thread thread = new Thread(() -> {
+
       while (true) {
         try {
-          String sentence;
-          BufferedReader inFromClient = new BufferedReader(new InputStreamReader(connectionSocket.getInputStream()));
-
-          sentence = inFromClient.readLine();
+          InputStream inFromClient = connectionSocket.getInputStream();
+          byte[] bytes = new byte[1024];
+          inFromClient.read(bytes);
+          String sentence = new String(bytes);
           String[] data = sentence.split(":");
-          if (sentence.equals("IMAV")) {
+          if (sentence.trim().equals("IMAV")) {
             updateIMAV(connectionSocket);
+            i.set(0);
             continue;
           }
           if (commandValidation(data)) {
-            serverResponseMsg(connectionSocket, "J_OK");
+            //serverResponseMsg(connectionSocket, "J_OK");
           } else {
             serverResponseMsg(connectionSocket, "J_ER Unknown command: " + data[0].split(" ")[0].trim());
             continue;
@@ -77,7 +83,7 @@ public class Server {
           if (data[1].trim().equals("QUIT")) {
             break;
           }
-          System.out.println("FROM CLIENT: " + sentence);
+          System.out.println("FROM CLIENT: " + sentence.trim());
           syncChat(data[1].trim(), data[0].substring(4).trim());
         } catch (NullPointerException | IOException e) {
           break;
@@ -85,7 +91,7 @@ public class Server {
       }
       try {
         System.out.println(connectionSocket.getPort() + " Left");
-        removeByPort(connectionSocket.getPort());
+        //removeByPort(connectionSocket.getPort());
         connectionSocket.close();
       } catch (IOException e) {
         System.out.println("EIO");
@@ -95,12 +101,30 @@ public class Server {
     thread.start();
   }
 
+  static void timerThread(AtomicInteger i, int port) {
+    Thread thread = new Thread(() -> {
+      int u = 0;
+      while (u < 80) {
+        try {
+          i.incrementAndGet();
+          u = i.get();
+          Thread.sleep(1000);
+        } catch (InterruptedException e) {
+          e.printStackTrace();
+        }
+      }
+      removeByPort(port);
+    });
+    thread.start();
+
+  }
+
   static void syncChat(String msg, String name) throws IOException {
     for (HashMap userMap : users) {
-      if (name.equals(userMap.get("username").toString()))
+      if (name.equals(userMap.get("username").toString()) | ((Socket) userMap.get("socket")).isClosed())
         continue;
-      DataOutputStream outToClient = new DataOutputStream(((Socket) userMap.get("socket")).getOutputStream());
-      outToClient.writeBytes(name + ": " + msg + '\n');
+      OutputStream outToClient = (((Socket) userMap.get("socket")).getOutputStream());
+      outToClient.write((name + ": " + msg).getBytes());
     }
   }
 
@@ -109,34 +133,39 @@ public class Server {
     for (HashMap user : users)
       names.add(user.get("username").toString());
     for (HashMap userMap : users) {
-      DataOutputStream outToClient = new DataOutputStream(((Socket) userMap.get("socket")).getOutputStream());
-      outToClient.writeBytes("New user joined: " + names.toString() + '\n');
+      //IF OPEN SEND
+      if (!((Socket) userMap.get("socket")).isClosed()) {
+        OutputStream outToClient = (((Socket) userMap.get("socket")).getOutputStream());
+        outToClient.write(("New user joined: " + names.toString()).getBytes());
+      }
     }
 
   }
 
   static boolean commandValidation(String[] data) {
     String command = data[0].split(" ")[0].trim();
-    System.out.println(command);
+    System.out.println(command.trim());
     return command.equals("JOIN") | command.equals("DATA") | command.equals("IMAV") | command.equals("QUIT");
   }
 
   static String joinData(Socket connectionSocket) throws IOException {
-    BufferedReader inFromClient = new BufferedReader(new InputStreamReader(connectionSocket.getInputStream()));
-    String join = inFromClient.readLine();
-    System.out.println(join);
+    InputStream inFromClient = connectionSocket.getInputStream();
+    byte[] bytes = new byte[1024];
+    inFromClient.read(bytes);
+    String join = new String(bytes);
+    System.out.println(join.trim());
     String[] joinarray = join.split(",");
     String name = joinarray[0].substring(4).trim();
     String[] addr = joinarray[1].split(":");
     String IP = addr[0].trim();
     String port = addr[1].trim();
 
-    return name;
+    return name.trim();
   }
 
   static void serverResponseMsg(Socket socket, String msg) throws IOException {
-    DataOutputStream outToClient = new DataOutputStream((socket.getOutputStream()));
-    outToClient.writeBytes(msg + "\n");
+    OutputStream outToClient = (socket.getOutputStream());
+    outToClient.write(msg.getBytes());
   }
 
   static void updateIMAV(Socket socket) {
@@ -155,8 +184,8 @@ public class Server {
   }
 
   static boolean illegalChar(String name) {
-    String[] array = name.split("[^A-Za-z0-9\\-\\_]");
-    return array.length > 1;
+    String[] array = (name + "A").split("[^A-Za-z0-9\\-\\_]");
+    return array.length != 1;
   }
 
   static void removeByPort(int port) {
