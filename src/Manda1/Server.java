@@ -28,6 +28,13 @@ public class Server {
       inFromUser = connectionSocket.getInputStream();
       HashMap<String, Object> hashMap = new HashMap<>();
       String name = joinData(connectionSocket).trim();
+
+      if (name.equals("UNKNOWN")) {
+        System.out.println("unknown");
+        serverResponseMsg(connectionSocket, "J_ER Unknown command: " + name);
+        continue;
+      }
+
       if (freeUsername(name)) {
         serverResponseMsg(connectionSocket, "J_ER Duplicate username: Username " + name + " taken.");
         continue;
@@ -80,7 +87,7 @@ public class Server {
             serverResponseMsg(connectionSocket, "J_ER Unknown command: " + data[0].split(" ")[0].trim());
             continue;
           }
-          if (data[1].trim().equals("QUIT")) {
+          if (sentence.trim().equals("QUIT")) {
             break;
           }
           System.out.println("FROM CLIENT: " + sentence.trim());
@@ -148,19 +155,27 @@ public class Server {
     return command.equals("JOIN") | command.equals("DATA") | command.equals("IMAV") | command.equals("QUIT");
   }
 
+  static boolean commandValidation(String data) {
+    System.out.println(data);
+    return data.equals("JOIN") | data.equals("DATA") | data.equals("IMAV") | data.equals("QUIT");
+  }
+
   static String joinData(Socket connectionSocket) throws IOException {
     InputStream inFromClient = connectionSocket.getInputStream();
     byte[] bytes = new byte[1024];
     inFromClient.read(bytes);
     String join = new String(bytes);
-    System.out.println(join.trim());
-    String[] joinarray = join.split(",");
-    String name = joinarray[0].substring(4).trim();
-    String[] addr = joinarray[1].split(":");
-    String IP = addr[0].trim();
-    String port = addr[1].trim();
+    if (join.split(" ")[0].equals("JOIN")) {
+      System.out.println(join.trim());
+      String[] joinarray = join.split(",");
+      String name = joinarray[0].substring(4).trim();
+      String[] addr = joinarray[1].split(":");
+      String IP = addr[0].trim();
+      String port = addr[1].trim();
+      return name.trim();
 
-    return name.trim();
+    }
+    return "UNKNOWN";
   }
 
   static void serverResponseMsg(Socket socket, String msg) throws IOException {
@@ -174,7 +189,7 @@ public class Server {
         user.put("alive", true);
       break;
     }
-    System.out.println("Update alive for: " + socket.getPort());
+    System.out.println("\u001B[31mUpdate alive for: " + socket.getPort() + "\u001B[0m");
   }
 
   static boolean freeUsername(String name) {

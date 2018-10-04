@@ -59,6 +59,7 @@ public class Gui {
             frame.dispose();
           chatField.setText("");
 
+
         }
       }
     });

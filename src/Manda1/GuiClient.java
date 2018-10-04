@@ -27,11 +27,12 @@ public class GuiClient {
   static void sendMsg(String username, String msg) {
     try {
       sentence = String.format("DATA %s: %s", username, msg);
-      outToServer.write(sentence.getBytes());
       if (msg.equals("QUIT")) {
+        outToServer.write(msg.getBytes());
         aliveThread.interrupt();
         msg = "QUIT";
       }
+      outToServer.write(sentence.getBytes());
     } catch (IOException e) {
       e.printStackTrace();
     }
