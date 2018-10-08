@@ -20,7 +20,6 @@ public class Server {
 
     welcomeSocket = new ServerSocket(5656);
 
-    //inFromUser = new BufferedReader(new InputStreamReader(System.in));
     System.out.println(welcomeSocket.getLocalSocketAddress());
 
     while (true) {
@@ -30,11 +29,9 @@ public class Server {
       String name = joinData(connectionSocket).trim();
 
       if (name.equals("UNKNOWN")) {
-        System.out.println("unknown");
         serverResponseMsg(connectionSocket, "J_ER Unknown command: " + name);
         continue;
       }
-
       if (freeUsername(name)) {
         serverResponseMsg(connectionSocket, "J_ER Duplicate username: Username " + name + " taken.");
         continue;
@@ -51,17 +48,12 @@ public class Server {
       serverResponseMsg(connectionSocket, "J_OK");
 
       hashMap.put("username", name);
-      hashMap.put("alive", true);
       hashMap.put("socket", connectionSocket);
       users.add(hashMap);
 
       newUserJoined();
       threadReceive(connectionSocket);
     }
-
-
-    //connectionSocket.close();
-    // welcomeSocket.close();
   }
 
   static void threadReceive(Socket connectionSocket) {
@@ -77,7 +69,7 @@ public class Server {
           String sentence = new String(bytes);
           String[] data = sentence.split(":");
           if (sentence.trim().equals("IMAV")) {
-            updateIMAV(connectionSocket);
+            System.out.println("\u001B[31mUpdate alive for: " + connectionSocket.getPort() + "\u001B[0m");
             i.set(0);
             continue;
           }
@@ -103,10 +95,8 @@ public class Server {
       }
       try {
         System.out.println(connectionSocket.getPort() + " Left");
-        //removeByPort(connectionSocket.getPort());
         connectionSocket.close();
       } catch (IOException e) {
-        System.out.println("EIO");
         e.printStackTrace();
       }
     });
@@ -151,18 +141,6 @@ public class Server {
         outToClient.write(("New user joined: " + names.toString()).getBytes());
       }
     }
-
-  }
-
-  static boolean commandValidation(String[] data) {
-    String command = data[0].split(" ")[0].trim();
-    System.out.println(command.trim());
-    return command.equals("JOIN") | command.equals("DATA") | command.equals("IMAV") | command.equals("QUIT");
-  }
-
-  static boolean commandValidation(String data) {
-    System.out.println(data);
-    return data.equals("JOIN") | data.equals("DATA") | data.equals("IMAV") | data.equals("QUIT");
   }
 
   static String joinData(Socket connectionSocket) throws IOException {
@@ -174,27 +152,22 @@ public class Server {
       System.out.println(join.trim());
       String[] joinarray = join.split(",");
       String name = joinarray[0].substring(4).trim();
-      String[] addr = joinarray[1].split(":");
-      String IP = addr[0].trim();
-      String port = addr[1].trim();
+//      String[] addr = joinarray[1].split(":");
+//      String IP = addr[0].trim();
+//      String port = addr[1].trim();
       return name.trim();
-
     }
     return "UNKNOWN";
+  }
+
+  static boolean commandValidation(String[] data) {
+    String command = data[0].split(" ")[0].trim();
+    return command.equals("JOIN") | command.equals("DATA") | command.equals("IMAV") | command.equals("QUIT");
   }
 
   static void serverResponseMsg(Socket socket, String msg) throws IOException {
     OutputStream outToClient = (socket.getOutputStream());
     outToClient.write(msg.getBytes());
-  }
-
-  static void updateIMAV(Socket socket) {
-    for (HashMap user : users) {
-      if (((Socket) user.get("socket")).getPort() == socket.getPort())
-        user.put("alive", true);
-      break;
-    }
-    System.out.println("\u001B[31mUpdate alive for: " + socket.getPort() + "\u001B[0m");
   }
 
   static boolean freeUsername(String name) {
