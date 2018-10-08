@@ -1,13 +1,19 @@
-package Manda1;
+package Manda1Cryp;
 
+import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.Socket;
 
+import Manda1.Gui;
+
 public class GuiClient {
+  static BufferedReader inFromUser;
   static Socket clientSocket;
   static OutputStream outToServer;
+  static InputStream inFromServer;
+  static String username = "hanse9";
   static String sentence = "";
   static volatile String msg = "";
   static Thread aliveThread;

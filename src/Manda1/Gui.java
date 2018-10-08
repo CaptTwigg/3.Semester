@@ -1,11 +1,10 @@
 package Manda1;
 
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 
 import javax.swing.JButton;
+import javax.swing.JCheckBox;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
@@ -23,6 +22,7 @@ public class Gui {
   private JPanel fieldPanel;
   private JTextField chatField;
   private JScrollPane ScrollPane;
+  private JCheckBox checkBox1;
 
   public Gui() {
 
@@ -36,34 +36,32 @@ public class Gui {
     frame.setVisible(true);
 
 
-    connectButton.addActionListener(new ActionListener() {
-      @Override
-      public void actionPerformed(ActionEvent e) {
-        String connectRespons = GuiClient.connect(username.getText(), IP.getText(), port.getText());
-        chat.setText(chat.getText() + connectRespons + '\n');
-        System.out.println(connectRespons);
-        if (connectRespons.trim().equals("J_OK")){
-          connectButton.setEnabled(false);
-          chatField.setEnabled(true);
-        }
+    connectButton.addActionListener(e -> {
+      String connectResponds = GuiClient.connect(username.getText(), IP.getText(), port.getText());
+      chat.setText(chat.getText() + connectResponds + '\n');
+      System.out.println(connectResponds);
+      if (connectResponds.trim().equals("J_OK")){
+        connectButton.setEnabled(false);
+        chatField.setEnabled(true);
+        checkBox1.setEnabled(false);
       }
     });
+
     chatField.addKeyListener(new KeyAdapter() {
       @Override
       public void keyPressed(KeyEvent e) {
         if (e.getKeyCode() == KeyEvent.VK_ENTER) {
           GuiClient.sendMsg(username.getText(), chatField.getText());
-          chat.setText(chat.getText() + username.getText() + ": " + chatField.getText()+ '\n');
+          //chat.setText(chat.getText() + username.getText() + ": " + chatField.getText()+ '\n');
 
           if(chatField.getText().trim().equals("QUIT"))
             frame.dispose();
           chatField.setText("");
-
-
         }
       }
     });
   }
+
   public void addToChat(String msg){
     chat.setText(chat.getText() + msg + '\n');
   }

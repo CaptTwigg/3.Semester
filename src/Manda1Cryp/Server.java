@@ -1,4 +1,4 @@
-package Manda1;
+package Manda1Cryp;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -87,11 +87,6 @@ public class Server {
             serverResponseMsg(connectionSocket, "J_ER Unknown command: " + data[0].split(" ")[0].trim());
             continue;
           }
-          if (sentence.trim().length() > 250) {
-            System.out.println(sentence.trim().length());
-            serverResponseMsg(connectionSocket, "J_ER Message too long: " + sentence + '\n');
-            continue;
-          }
           if (sentence.trim().equals("QUIT")) {
             break;
           }
@@ -133,8 +128,8 @@ public class Server {
 
   static void syncChat(String msg, String name) throws IOException {
     for (HashMap userMap : users) {
-//      if (name.equals(userMap.get("username").toString()) | ((Socket) userMap.get("socket")).isClosed())
-//        continue;
+      if (name.equals(userMap.get("username").toString()) | ((Socket) userMap.get("socket")).isClosed())
+        continue;
       OutputStream outToClient = (((Socket) userMap.get("socket")).getOutputStream());
       outToClient.write((name + ": " + msg).getBytes());
     }

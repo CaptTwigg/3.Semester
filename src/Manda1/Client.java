@@ -7,7 +7,9 @@ import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.net.Socket;
 import java.util.Scanner;
-
+/*
+Old might not work..
+ */
 public class Client {
   static BufferedReader inFromUser;
   static Socket clientSocket;
