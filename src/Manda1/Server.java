@@ -131,16 +131,17 @@ public class Server {
   }
 
   static void newUserJoined() throws IOException {
-    ArrayList<String> names = new ArrayList<>();
+    StringBuilder names = new StringBuilder();
     for (HashMap user : users)
-      names.add(user.get("username").toString());
-    for (HashMap userMap : users) {
-      //IF OPEN SEND
-      if (!((Socket) userMap.get("socket")).isClosed()) {
-        OutputStream outToClient = (((Socket) userMap.get("socket")).getOutputStream());
-        outToClient.write(("New user joined: " + names.toString()).getBytes());
-      }
-    }
+      names.append(user.get("username").toString()).append(" ");
+    syncChat(names.toString()+'\n',"LIST");
+//    for (HashMap userMap : users) {
+//      //IF OPEN SEND
+//      if (!((Socket) userMap.get("socket")).isClosed()) {
+//        OutputStream outToClient = (((Socket) userMap.get("socket")).getOutputStream());
+//        outToClient.write(("New user joined: " + names.toString()).getBytes());
+//      }
+//    }
   }
 
   static String joinData(Socket connectionSocket) throws IOException {
