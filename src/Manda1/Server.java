@@ -123,8 +123,8 @@ public class Server {
 
   static void syncChat(String msg, String name) throws IOException {
     for (HashMap userMap : users) {
-//      if (name.equals(userMap.get("username").toString()) | ((Socket) userMap.get("socket")).isClosed())
-//        continue;
+      if (((Socket) userMap.get("socket")).isClosed())
+        continue;
       OutputStream outToClient = (((Socket) userMap.get("socket")).getOutputStream());
       outToClient.write((name + ": " + msg).getBytes());
     }
