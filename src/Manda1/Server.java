@@ -67,16 +67,16 @@ public class Server {
           byte[] bytes = new byte[1024];
           inFromClient.read(bytes);
           String sentence = new String(bytes);
-          String[] data = sentence.split(":");
+          String[] splitSentence = sentence.split(":");
           if (sentence.trim().equals("IMAV")) {
             System.out.println("\u001B[31mUpdate alive for: " + connectionSocket.getPort() + "\u001B[0m");
             i.set(0);
             continue;
           }
-          if (commandValidation(data)) {
+          if (commandValidation(splitSentence)) {
             //serverResponseMsg(connectionSocket, "J_OK");
           } else {
-            serverResponseMsg(connectionSocket, "J_ER Unknown command: " + data[0].split(" ")[0].trim());
+            serverResponseMsg(connectionSocket, "J_ER Unknown command: " + splitSentence[0].split(" ")[0].trim());
             continue;
           }
           if (sentence.trim().length() > 250) {
@@ -88,7 +88,7 @@ public class Server {
             break;
           }
           System.out.println("FROM CLIENT: " + sentence.trim());
-          syncChat(data[1].trim(), data[0].substring(4).trim());
+          syncChat(splitSentence[1].trim(), splitSentence[0].substring(4).trim());
         } catch (NullPointerException | IOException e) {
           break;
         }
@@ -135,13 +135,6 @@ public class Server {
     for (HashMap user : users)
       names.append(user.get("username").toString()).append(" ");
     syncChat(names.toString()+'\n',"LIST");
-//    for (HashMap userMap : users) {
-//      //IF OPEN SEND
-//      if (!((Socket) userMap.get("socket")).isClosed()) {
-//        OutputStream outToClient = (((Socket) userMap.get("socket")).getOutputStream());
-//        outToClient.write(("New user joined: " + names.toString()).getBytes());
-//      }
-//    }
   }
 
   static String joinData(Socket connectionSocket) throws IOException {
