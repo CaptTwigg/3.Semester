@@ -32,13 +32,10 @@ public class UDP {
     } catch (SocketException | UnknownHostException e) {
       e.printStackTrace();
     }
-
     threadReceive(receivingSocket);
-
   }
 
-
-   void threadReceive(DatagramSocket receivingSocket) {
+  void threadReceive(DatagramSocket receivingSocket) {
     Thread thread = new Thread(() -> {
       while (true) {
         byte[] data = new byte[1024];
@@ -59,7 +56,6 @@ public class UDP {
   void send(String sentence) throws Exception {
     int length;
     byte[] data;
-
     length = sentence.length();
     data = sentence.getBytes();
     DatagramPacket sendPacket = new DatagramPacket(data, length, IPAddress, sendToPort);

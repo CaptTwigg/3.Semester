@@ -11,14 +11,13 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 public class Server {
 
-  static ServerSocket welcomeSocket;
-  static InputStream inFromUser;
-  static ArrayList<HashMap> users = new ArrayList<>();
+  private static InputStream inFromUser;
+  private static ArrayList<HashMap> users = new ArrayList<>();
 
 
   public static void main(String argv[]) throws Exception {
 
-    welcomeSocket = new ServerSocket(5656);
+    ServerSocket welcomeSocket = new ServerSocket(5656);
 
     System.out.println(welcomeSocket.getLocalSocketAddress());
 
@@ -56,7 +55,7 @@ public class Server {
     }
   }
 
-  static void threadReceive(Socket connectionSocket) {
+  private static void threadReceive(Socket connectionSocket) {
     AtomicInteger i = new AtomicInteger();
     timerThread(i, connectionSocket.getPort());
     Thread thread = new Thread(() -> {
@@ -67,13 +66,13 @@ public class Server {
           byte[] bytes = new byte[1024];
           inFromClient.read(bytes);
           String sentence = new String(bytes);
-          String[] splitSentence = sentence.split(":");
+          String[] splitSentence = sentence.split(":",2);
           if (sentence.trim().equals("IMAV")) {
             System.out.println("\u001B[31mUpdate alive for: " + connectionSocket.getPort() + "\u001B[0m");
             i.set(0);
             continue;
           }
-          if (commandValidation(splitSentence)) {
+          if (sentence.split(" ")[0].equals("DATA")) {
             //serverResponseMsg(connectionSocket, "J_OK");
           } else {
             serverResponseMsg(connectionSocket, "J_ER Unknown command: " + splitSentence[0].split(" ")[0].trim());
@@ -95,6 +94,7 @@ public class Server {
       }
       try {
         System.out.println(connectionSocket.getPort() + " Left");
+        removeByPort(connectionSocket.getPort());
         connectionSocket.close();
       } catch (IOException e) {
         e.printStackTrace();
@@ -103,7 +103,7 @@ public class Server {
     thread.start();
   }
 
-  static void timerThread(AtomicInteger i, int port) {
+  private static void timerThread(AtomicInteger i, int port) {
     Thread thread = new Thread(() -> {
       int u = 0;
       while (u < 80) {
@@ -121,7 +121,7 @@ public class Server {
 
   }
 
-  static void syncChat(String msg, String name) throws IOException {
+  private static void syncChat(String msg, String name) throws IOException {
     for (HashMap userMap : users) {
       if (((Socket) userMap.get("socket")).isClosed())
         continue;
@@ -130,7 +130,7 @@ public class Server {
     }
   }
 
-  static void newUserJoined() throws IOException {
+  private static void newUserJoined() throws IOException {
     StringBuilder names = new StringBuilder();
     for (HashMap user : users)
       names.append(user.get("username").toString()).append(" ");
@@ -159,23 +159,23 @@ public class Server {
     return command.equals("JOIN") | command.equals("DATA") | command.equals("IMAV") | command.equals("QUIT");
   }
 
-  static void serverResponseMsg(Socket socket, String msg) throws IOException {
+  private static void serverResponseMsg(Socket socket, String msg) throws IOException {
     OutputStream outToClient = (socket.getOutputStream());
     outToClient.write(msg.getBytes());
   }
 
-  static boolean freeUsername(String name) {
+  private static boolean freeUsername(String name) {
     for (HashMap user : users)
       return user.get("username").toString().equalsIgnoreCase(name);
     return false;
   }
 
-  static boolean illegalChar(String name) {
+  private static boolean illegalChar(String name) {
     String[] array = (name + "A").split("[^A-Za-z0-9\\-\\_]");
     return array.length != 1;
   }
 
-  static void removeByPort(int port) {
+  private static void removeByPort(int port) {
     for (HashMap user : users) {
       if (((Socket) user.get("socket")).getPort() == port) {
         System.out.println(users);

@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+
+<form>
+    <input type="text" id="name-text" value="alice">
+    <button type="button" id="my-calc-btn">Say hello</button>
+</form>
+
+<div id="welcome-div">Welcome!</div>
+
+<form>
+    <input type="text" id="post-to-find">
+    <button type="button" id="post-to-find-btn">Find</button>
+</form>
+<h1 id="show-info"></h1>
+
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+
+<script>
+  $(document).on('click', "#my-calc-btn", function () {
+    var name = $('#name-text').val();
+    $('#welcome-div').text("Welcome, " + name + "!");
+  });
+
+  $.ajax({
+    url: 'https://ajax.googleapis.com/ajax/services/language/translate',
+    dataType: 'jsonp',
+    data: { q: 'Hello world!',  // text to translate
+      v: '1.0',
+      langpair: 'en|es' },   // '|es' for auto-detect
+    success: function(result) {
+      alert(result.responseData.translatedText);
+    },
+    error: function(XMLHttpRequest, errorMsg, errorThrown) {
+      alert(errorMsg);
+    }
+  });
+
+
+  // $(document).on('click', "#post-to-find-btn", function () {
+  //   var postnr = $('#post-to-find').val();
+  //
+  //   $.ajax({
+  //     url: "https://ghibliapi.herokuapp.com/films/58611129-2dbc-4a81-a72f-77ddfc1b1b49",
+  //     method: "get",
+  //
+  //
+  //     success: function (resp) {
+  //       console.log(resp);
+  //       var city = resp.title;
+  //       $('#show-info').text(city);
+  //     },
+  //     error: function (resp) {
+  //       console.log("somthing went vaery bad");
+  //       console.log(resp);
+  //     }
+  //   });
+  //
+  //
+  // });
+
+
+</script>
+
+
+</body>
+</html>
